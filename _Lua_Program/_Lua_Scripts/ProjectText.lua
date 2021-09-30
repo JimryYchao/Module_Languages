@@ -1,9 +1,16 @@
 
 
-a = { 1,2,3,4}
 
-if a then
-    print("数字 0 是 true")
-else
-    print("数字 0 为 false")
+Arr = function(key,value)
+    if value< key then
+        print(value)
+        value = value +1 -- statements
+        
+    end
+    return value,value*2
 end
+
+for k,v in Arr,10,0 do
+
+end
+
