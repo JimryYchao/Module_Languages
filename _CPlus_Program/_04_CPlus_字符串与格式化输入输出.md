@@ -13,7 +13,13 @@
     - [3.3 明示常量](#33-明示常量)
   - [4. 输入与输出](#4-输入与输出)
     - [4.1 printf()](#41-printf)
-    - [4.2 printf 转换说明修饰符](#42-printf-转换说明修饰符)
+    - [4.2 printf() 转换说明修饰符](#42-printf-转换说明修饰符)
+    - [4.3 转换说明的意义](#43-转换说明的意义)
+    - [4.4 scanf()](#44-scanf)
+    - [4.5 printf 和 scanf 的区别](#45-printf-和-scanf-的区别)
+    - [4.6 scanf() 转换说明修饰符](#46-scanf-转换说明修饰符)
+    - [4.7 printf 和 scanf 的*修饰符](#47-printf-和-scanf-的修饰符)
+  - [5. getchar() 与 putchar()](#5-getchar-与-putchar)
 
 ---
 ## 1. 前导案例
@@ -185,6 +191,7 @@ int main(void)
 ### 4.1 printf()
 
 - 请求printf()函数打印数据的指令要与待打印数据的类型相匹配。
+- printf() 函数的返回值为字符数组字符数量，为负值时表示输出错误。计算针对所有字符数，包括空格和不可见的换行符（\n）
 
 > 转换说明及其打印的输出结果
 
@@ -212,7 +219,7 @@ int main(void)
 - 打印百分数符号：%%
 
 ---
-### 4.2 printf 转换说明修饰符
+### 4.2 printf() 转换说明修饰符
 
 - 在%和转换字符之间插入修饰符可修饰基本的转换说明。
   
@@ -339,3 +346,173 @@ int main(void)
     [Authe                   ]
 */
 ```
+
+---
+### 4.3 转换说明的意义
+
+- 实际上，转换说明的操作本质上是将原始值翻译成特定类型文本并打印出来。
+
+> 注意
+
+- 转换说明应该与待打印值的类型相匹配。
+
+```c
+#include <stdio.h>
+int main(void)
+{
+	float n1 = 3.0;
+	double n2 = 3.0;
+	long n3 = 2000000000;
+	long n4 = 1234567890;
+	printf("%.1e %.1e %.1e %.1e\n", n1, n2, n3, n4);
+	printf("%ld %ld\n", n3, n4);
+	printf("%ld %ld %ld %ld\n", n1, n2, n3, n4);
+	return 0;
+}
+/*
+	3.0e+00 3.0e+00 3.1e+46 1.4e-305
+	2000000000 1234567890
+	0 1074266112 0 1074266112
+*/
+```
+
+- 第1行，%e 未将 long 整数转换成浮点数
+- 第3行，printf 语句中由其他不匹配的地方，即使后面用对了转换说明也会产生虚假的结果。
+
+> 参数传递机制
+
+- 参数传递机制因实现而异
+- 就 printf("%ld %ld %ld %ld\n", n1, n2, n3, n4)，对于 n1，n2，系统仍会将 float(4bits) 转换成 double(8bits) 储存在 stack 中，n3,n4 long(4bits) 紧随压入栈中，
+- %ld 转换说明，取参数读取栈中数据应读取 4 字节的 long 类型，但将 n1 的前半部分作为第一个参数，后半部分作为第二个参数。因此出现 printf 读错了字节导致转换说明出错。
+
+---
+### 4.4 scanf()
+
+- scanf() 将输入的字符串转换成整数、浮点数、字符或字符串，同样和 printf 类似使用格式字符串和参数列表。
+- scanf 中的格式字符串表明字符输入流的目标数据类型。
+- 如果用scanf()读取基本变量类型的值，在变量名前加上一个&；
+- 如果用scanf()把字符串读入字符数组中，不要使用&。
+- scanf()函数使用空白（换行符、制表符和空格）把输入分成多个字段。但使用 %c 转换说明，scanf 会读取每个字符，包括空白
+
+- scanf() 函数返回成功读取的项数，0 表示未读取任何项。
+
+```c
+#include <stdio.h>
+int main(void)
+{
+	int age; // 变量
+	float assets; // 变量
+	char pet[30]; // 字符数组，用于储存字符串
+	printf("Enter your age, assets, and favorite pet.\n");
+	scanf("%d %f", &age, &assets); // 这里要使用& 
+	scanf("%s",pet); // 字符数组不使用&
+								  
+	printf("%d $%.2f %s\n", age, assets, pet); 
+	return 0;
+}
+```
+
+---
+### 4.5 printf 和 scanf 的区别
+
+- scanf()函数所用的转换说明与printf()函数几乎相同。
+- 主要的区别是，对于float类型和double类型，printf()都使用%f、%e、%E、%g和%G转换说明。
+- scanf()只把它们用于float类型，对于 double 类型时要使用 l 修饰符。
+
+---
+### 4.6 scanf() 转换说明修饰符
+
+```
+    %c              字符
+    %d,i            有符号十进制整数
+    %e,f,g,a        浮点数
+    %E,F,G,A        浮点数
+    %o              有符号八进制整数
+    %p              指针
+    %s              字符串,从第一个非空白到下一个空白之前
+    %u              无符号十进制整数
+    %x,X            十六进制整数
+```
+
+> 修饰符
+
+```
+    *               抑制赋值
+    数字            最大字段宽度,到最大字段或空白处停止
+    hh              把整数作为 signed/unsigned char 读取
+    ll              把整数作为 (unsigned) long long 读取
+
+    h,l             %hd,hi      short int
+                    %ho,hx,hu   unsigned shot int
+                    %ld,li      long
+                    %lo,lx,lu   unsigned long 
+                    %le,lf,lg   double
+    L               %Le,Lf,Lg   long double
+
+    j               修饰整型    intmax_t 或 uintmax_t 类型
+    z               sizeof 类型
+    t               修饰整型    指针差值类型
+```
+
+> 注意
+
+- scanf()函数允许把普通字符放在格式字符串中。除空格字符外的普通字符必须与输入字符串严格匹配
+
+```
+假设在两个转换说明中添加一个逗号：
+    
+    scanf("%d,%d", &n, &m);
+    
+scanf()函数将其解释成：用户将输入一个数字、一个逗号，然后再输入一个数字。也
+就是说，用户必须像下面这样进行输入两个整数：
+    
+    88,121
+```
+
+- 除了 %c，其他转换说明都会自动跳过待输入值前面所有的空白。scanf("%d%d", &n, &m)与scanf("%d %d", &n, &m)的行为相同
+- 对于 %c，scanf("%c", &ch)从输入中的第1个字符开始读取，而scanf(" %c", &ch)则从第1个非空白字符开始读取。
+
+---
+### 4.7 printf 和 scanf 的*修饰符
+
+- printf 中的 * 表示用 * 代替预先字段宽度，%*d 表示可以通过传入的参数用户控制浮点值指定精度和字段宽度。( \* 预先占位符)
+
+```c
+#include <stdio.h>
+int main(void)
+{
+	unsigned width, precision;
+	int number = 256;
+	double weight = 242.5;
+
+	printf("Enter a field width:\n");
+	scanf("%d", &width);    // 6
+	printf("The number is :%*d:\n", width, number);  // 256
+
+	printf("Now enter a width and a precision:\n");
+	scanf("%d %d", &width, &precision);    // 8 3
+	printf("Weight = %*.*f\n", width, precision, weight); // 242.500
+
+	printf("Done!\n");
+	return 0;
+}
+```
+
+- Scanf：把*放在%和转换字符之间时，会使得scanf()跳过相应的输出项。
+- scanf("%\*d %\*d %d", &n);  scanf 会跳过前两个整数，把第三个整数赋值给 n
+
+---
+## 5. getchar() 与 putchar()
+
+- getchar()函数不带任何参数，它从输入队列中返回下一个字符。
+- putchar()函数打印它的参数
+
+```c
+    char ch;
+    ch = getchar();  //等价于 scanf("%c",&ch);
+    putchar(ch);     //等价于 printf("%c",ch);   
+```
+
+- 此类函数只处理字符, 因此效率上比通用的 printf 与 scanf 更快更简洁
+
+---
