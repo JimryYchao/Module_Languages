@@ -3,6 +3,7 @@
         "stdio.h": "c",
         "stdint.h": "c",
         "inttypes.h": "c",
-        "stdbool.h": "c"
+        "stdbool.h": "c",
+        "conio.h": "c"
     }
 }

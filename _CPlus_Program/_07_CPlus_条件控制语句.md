@@ -6,7 +6,7 @@
   - [2. 逻辑运算符](#2-逻辑运算符)
   - [3. 条件运算符 ?:](#3-条件运算符-)
   - [4. 多重选择 switch 和 break](#4-多重选择-switch-和-break)
-    - [4.1 switch 语句](#41-switch-语句)
+  - [5. goto 语句](#5-goto-语句)
 
 ---
 ## 1. if 条件分支语句
@@ -119,8 +119,7 @@ int main(void)
 }
 ```
 
----
-### 4.1 switch 语句
+> switch 语句
 
 ```c
     switch(整数表达式){
@@ -134,7 +133,35 @@ int main(void)
 - case 语句没有 break 时, 允许case 之间自上而下贯穿, 直至遇到 default 或语句块结束, 或遇到 break 语句;
 - case 的类型必须能包含 switch(exp) 指定校验选择的数据类型(必须是整数类型), 至少要类型一致;
 - break 语句会跳出 switch 语句块, default 分支表示当所有未满足 case 分支时的最终选择(可选分支)
-- C语言的case一般都指定一个值，不能使用一个范围
+- C语言的 case 一般都指定一个常量值，不能使用一个范围
 
+---
+## 5. goto 语句
 
+- goto 语句有两部分: goto 与 标签名
+- 一般条件跳转 if ~ else 结构可以满足, goto 语句一般用于出现问题时从一组嵌套循环中跳出, 而 break 只能跳出当前循环
 
+```c
+int main(void)
+{
+    int funct,i,j;
+    while(funct > 0){
+        for (i = 0; i < 100; i++)
+        {
+            for ( j = 0 ;j < 50 ;j++)
+            {
+                //do.....
+                if (condition)
+                    goto out;
+            }
+            //do.....
+        }
+        //do.....
+    }
+    out:
+        //do....
+    return 0;
+}
+```
+
+---
