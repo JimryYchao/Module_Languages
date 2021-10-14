@@ -3,6 +3,11 @@
 int imax(int,...); 
 
 #include <stdio.h>
+
+void Func(int size, int Arr[size]);
+void Func(int row, int col, int Arr[row][col]);
+void Func(int size, int(*pr)[size]);
+
 #define MONTHS 12
 int main(void)
 {

@@ -1,5 +1,10 @@
 # C Plus 数据与C
 
+- 关键字： int 、short 、long 、unsigned 、char 、float 、double、_Bool、_Complex、_Imaginary 运算符：sizeof()
+- 函数：scanf()
+- 整数类型和浮点数类型的区别
+- 基本数据结构
+
 ---
 - [C Plus 数据与C](#c-plus-数据与c)
   - [1. 变量与常量](#1-变量与常量)
