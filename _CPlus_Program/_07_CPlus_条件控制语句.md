@@ -83,12 +83,13 @@ int main(void)
 > 短路原则
 
 - 当 && 左侧不满足结果为 true 的条件时, 右侧表达式不会被计算
+
 - 当 || 左侧满足结果为 true 时, 右侧表达式不会被计算
 
 ---
 ## 3. 条件运算符 ?:
 
-- C提供条件表达式（conditional expression）作为表达if else语句的一种便捷方式，该表达式使用?:条件运算符
+- C 提供条件表达式（conditional expression）作为表达 if else 语句的一种便捷方式，该表达式使用?:条件运算符
 
 ```C
     x = (条件判断式) ? true_exp : false_exp
@@ -135,15 +136,19 @@ int main(void)
     }
 ```
 
-- case 语句没有 break 时, 允许case 之间自上而下贯穿, 直至遇到 default 或语句块结束, 或遇到 break 语句;
+- case 语句没有 break 时, 允许 case 之间自上而下贯穿, 直至遇到 default 或语句块结束, 或遇到 break 语句;
+
 - case 的类型必须能包含 switch(exp) 指定校验选择的数据类型(必须是整数类型), 至少要类型一致;
+
 - break 语句会跳出 switch 语句块, default 分支表示当所有未满足 case 分支时的最终选择(可选分支)
-- C语言的 case 一般都指定一个常量值，不能使用一个范围
+
+- C 语言的 case 一般都指定一个常量值，不能使用一个范围
 
 ---
 ## 5. goto 语句
 
 - goto 语句有两部分: goto 与 标签名
+
 - 一般条件跳转 if ~ else 结构可以满足, goto 语句一般用于出现问题时从一组嵌套循环中跳出, 而 break 只能跳出当前循环
 
 ```c

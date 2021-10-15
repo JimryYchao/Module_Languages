@@ -4,6 +4,11 @@
         "stdint.h": "c",
         "inttypes.h": "c",
         "stdbool.h": "c",
-        "conio.h": "c"
-    }
+        "conio.h": "c",
+        "initializer_list": "c",
+        "type_traits": "c",
+        "xstring": "c",
+        "xutility": "c"
+    },
+    "C_Cpp.errorSquiggles": "Disabled"
 }
