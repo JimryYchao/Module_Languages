@@ -2,8 +2,8 @@
 
 - 输入输出函数： gets() 、gets_s() 、fgets() 、puts() 、fputs() 
 - 字符串函数：strcat() 、strncat() 、strcmp() 、strncmp() 、strcpy() 、strncpy()、sprintf()、strchr() 
-- C 库中的字符和字符串函数
-  
+- C 库中的字符和字符串转换函数  
+
 ---
 - [C Plus 字符串与字符串函数](#c-plus-字符串与字符串函数)
   - [1. 表示字符串和字符串 I/O](#1-表示字符串和字符串-io)
@@ -33,6 +33,15 @@
     - [5.7 sprintf](#57-sprintf)
     - [5.8 其他字符串函数](#58-其他字符串函数)
   - [6. 字符串排序](#6-字符串排序)
+    - [6.1 排序指针](#61-排序指针)
+    - [6.2 选择排序算法](#62-选择排序算法)
+  - [7 ctype.h 字符函数与字符串](#7-ctypeh-字符函数与字符串)
+  - [8. 使用命令行参数](#8-使用命令行参数)
+    - [8.1 C 程序读取并使用命令行参数附加项](#81-c-程序读取并使用命令行参数附加项)
+  - [9. 字符串转换成数字](#9-字符串转换成数字)
+    - [9.1 atoi 转换数字](#91-atoi-转换数字)
+    - [9.2 strtol 智能转换](#92-strtol-智能转换)
+    - [9.3 数字转换字符](#93-数字转换字符)
 
 ---
 ## 1. 表示字符串和字符串 I/O
@@ -769,3 +778,339 @@ int main(void) {
 ---
 ## 6. 字符串排序
 
+- 处理一个按字母表排序字符串的问题, 主要是用 strcmp() 函数来确定两个字符串的顺序
+
+```c
+#include <stdio.h>
+#include <string.h>
+#define SIZE 81 /* 限制字符串长度, 包括 \0 */
+#define LIM 20  /* 读入的最多行数 */
+#define HALT "" /* 空字符串停止输入 */
+
+void strsort(char *strings[], int num);
+char *s_gets(char *str, int n);
+
+int main(void)
+{
+    char input[LIM][SIZE]; /* 储存输入的数组 */
+    char *ptstr[LIM];      /* 内含指针变量的数组 */
+    int ct = 0;            /* 输入计数 */
+    int k;                 /* 输出计数 */
+
+    printf("Input up to %d lines, and I will sort them.\n", LIM);
+    printf("To stop, press the Enter key at a line's start.\n");
+
+    // 1. 输入
+    while (ct < LIM && s_gets(input[ct], SIZE) != NULL && input[ct][0] != '\0')
+    {
+        ptstr[ct] = input[ct];   /* 设置指针指向字符串 */
+        ct++;
+    }
+    // 2. 排序
+    strsort(ptstr, ct);          /* 字符串排序函数 */
+    // 3. 输出排序结果
+    puts("\nHere's the sorted list:\n");
+    for (k = 0; k < ct; k++)
+        puts(ptstr[k]);          /* 排序后的指针 */
+    return 0;
+}
+
+// 冒泡排序
+void strsort(char *strings[], int num)
+{
+    char *temp;
+    int top, seek;
+    for (top = 0; top < num - 1; top++)
+    {
+        for (seek = top + 1; seek < num; seek++)
+        {
+            if (strcmp(strings[top], strings[seek]) > 0)
+            {
+                temp = strings[top];
+                strings[top] = strings[seek];
+                strings[seek] = temp;
+            }
+        }
+    }
+}
+char *s_gets(char *str, int n)
+{
+    char *ret_val;
+    int i = 0;
+    ret_val = fgets(str, n, stdin);
+    if (ret_val)
+    {
+        while (str[i] != '\n' && str[i] != '\0')
+            i++;
+        if (str[i] == '\n')
+            str[i] = '\0';
+        else
+            while (getchar() != '\n')
+                continue;
+    }
+    return ret_val;
+}
+```
+
+---
+### 6.1 排序指针
+
+- 字符串排序: 通过比较指针对象的字符串值的先后顺序, 交换两者的指针, 本质排序的是指向字符串的指针, 而不是字符串本身, 同时保留了输入数组中的原始顺序
+
+---
+### 6.2 选择排序算法
+
+- qsort()。该函数使用一个指向函数的指针进行排序比较。
+
+---
+## 7 ctype.h 字符函数与字符串
+
+- ctype.h 中的函数通常作为宏（macro）来实现，C 预处理器宏的作用很像函数，但是两者有一些重要的区别
+
+```c
+    isalnum()       字母或数字
+    isalpha()       字母
+    isblank()       标准空白字符,空格,水平制表符,换行符或任何本地化指定空白字符
+    iscntrl()       控制字符
+    isdigit()       数字
+    isgraph()       除空格之外的任意可打印字符
+    islower()       小写字母
+    isprint()       可打印字符
+    ispunct()       标点符号,除空格或数字字母之外的任何可打印字符
+    isspace()       空白字符
+    isupper()       大写字母
+    isxdigit()      十六进制数字符
+
+    tolower()       参数是大写字符,函数返回小写字符
+    toupper()       参数是小写字符,函数返回大写字符
+```
+
+> 修改字符串
+
+```c
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#define LIMIT 81
+void ToUpper(char *);           // 把整个字符串转换成大写
+int PunctCount(const char *);   // 统计字符串中的标点符号个数
+int main(void)
+{
+    char line[LIMIT];
+    char *find;
+    puts("Please enter a line:");
+    fgets(line, LIMIT, stdin);
+    find = strchr(line, '\n'); // 查找换行符
+    if (find)                  // 如果地址不是 NULL，
+        *find = '\0';          // 用空字符替换
+    ToUpper(line);
+    puts(line);
+printf("That line has %d punctuation
+characters.\n", PunctCount(line)); return 0;
+}
+
+void ToUpper(char *str)
+{
+    while (*str)
+    {
+        *str = toupper(*str);
+        str++;
+    }
+}
+int PunctCount(const char *str)
+{
+    int ct = 0;
+    while (*str)
+    {
+        if (ispunct(*str))
+            ct++;
+        str++;
+    }
+    return ct;
+}
+```
+
+---
+## 8. 使用命令行参数
+
+- 命令行（command line）是在命令行环境中，用户为运行程序输入命令的行
+
+- 命令行参数（command-line argument）是同一行的附加项。
+
+- 假设一个文件中有一个名为 fuss 的程序
+
+> 在 UNIX 环境中运行命令
+
+- Linux 终端提供类 UNIX 命令行环境
+
+```powershell
+    $ fuss
+    $ fuss -r Ginger    # 命令行参数
+```
+
+> 在 Windows 命令提示模式下
+
+```powershell
+    C:\> fuss
+```
+
+---
+### 8.1 C 程序读取并使用命令行参数附加项
+
+> repeat 可执行文件
+
+```c
+/* repeat.c 可执行文件 */
+#include <stdio.h>
+int main(int argc, char *argv[])
+{
+    int i;
+    for(i= 0;i<argc;i++){
+        printf("arg[%d]: %s\n",i,argv[i]);
+    }
+}
+```
+
+> 命令行输入
+
+```powershell
+#--------命令行输入
+$ repeat 参数1 参数2 参数3
+#--------执行 repeat 程序后输出 
+arg[0]: D:\_JC_Workbook\_Languages_Programme\_CPlus_Program\a.exe
+arg[1]: 参数1
+arg[2]: 参数2
+arg[3]: 参数3
+
+# argc = 4
+# argv = 命令行参数数目
+```
+
+> int main(int argc, char* argv[])
+
+- argc 表示命令行输入的字符串数目
+
+- argv 等价于 char** argv, 表示字符串数组, 用于保存命令行输入的所有字符串, argv[0] = repeat 执行程序启动路径, argv[1...n]表示参数列表 
+  
+---
+## 9. 字符串转换成数字
+
+- 数字既能以字符串形式储存，也能以数值形式储存。把数字储存为字符串就是储存数字字符
+
+- C 语言中用数值形式进行数值运算, 在屏幕中显示数字是字符串形式, printf 和 springf 函数通过 %d 和其他转换说明, 把数字从数值转换成字符串形式, scanf 将输入字符转换成数值形式
+
+> 把命令行参数转换成数字
+
+```c
+/* convert.h */
+#include <stdio.h>
+#include <stdlib.h>
+int main(int argc, char *argv[])
+{
+    int i, times;
+    if (argc < 2 || (times = atoi(argv[1])) < 1)
+        // atoi() 函数把该字符串转换为整数值
+        printf("Usage: %s positive-number\n", argv[0]);
+    else
+        for (i = 0; i < times; i++)
+            puts("Hello, good looking!");
+    return 0;
+}
+```
+
+> 命令行输入
+
+```powershell
+    $ convert.exe abc
+    # Usage: D:\_JC_Workbook\_Languages_Programme\_CPlus_Program\a.exe positive-number
+
+    $ convert.exe 5
+    # Hello, good looking!
+    # Hello, good looking!
+    # Hello, good looking!
+    # Hello, good looking!
+    # Hello, good looking!
+```
+
+---
+### 9.1 atoi 转换数字
+
+- \#include stdlib.h
+
+- atoi() 函数把该字符串转换为 int 整数值
+
+- 若输入的字符串以数字开头, 它只把开头的整数转换为字符。例如, atoi("100scores") >>> return 100
+
+- atof 表示转换成 double 类型值
+
+- atol 表示转换成 long 类型
+
+---
+### 9.2 strtol 智能转换
+
+- ANSI C 还提供一套更智能的函数转换函数: strtol 表示转换成 long 整数, 该函数可以识别和报告字符串中的首字符是否是数字, strtol 与 strtoul 可以指定转换数字的进制
+
+- strtol()函数最多可以转换三十六进制，'a'~'z'字符都可用作数字
+
+```c
+float stdtof(char* nptr,char** endptr);
+double strtod(char* nptr,char** endptr);
+// nptr 指向待转换字符串的指针
+// endptr 指向被设置为表示转换输入数字结束字符的地址, *endptr 
+
+long strtol(char* nptr,char** endptr,int base);
+// base 表示以什么进制读取输入字符串 nptr, 并转换成十进制输出格式,  
+```
+
+> 使用 strtol
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#define LIM 30
+char* s_gets(char* st, int n);
+int main()
+{
+	char number[LIM];
+	char* end;
+	long value;
+	puts("Enter a number (empty line to quit):");
+	while (s_gets(number, LIM) && number[0] != '\0')
+	{
+		value = strtol(number, &end, 10); /* 十进制 */
+		printf("base 10 input, base 10 output: %ld, stopped at %s(%d)\n", 
+            value, end, *end);
+		value = strtol(number, &end, 16); /* 十六进制 */
+		printf("base 16 input, base 10 output: %ld, stopped at %s(%d)\n", 
+            value, end, *end);
+		puts("Next number:");
+	}
+	puts("Bye!\n");
+	return 0;
+}
+
+char* s_gets(char* st, int n)
+{
+	char* ret_val;
+	int i = 0;
+	ret_val = fgets(st, n, stdin);
+	if (ret_val)
+	{
+		while (st[i] != '\n' && st[i] != '\0')
+			i++;
+		if (st[i] == '\n')
+			st[i] = '\0';
+		else
+			while (getchar() != '\n')
+				continue;
+	}
+	return ret_val;
+}
+```
+
+--- 
+### 9.3 数字转换字符
+
+- itoa() 和 ftoa() 函数分别把整数和浮点数转换成字符串, 但他们不是 C 标准库函数, 可以用 springf() 函数代替它们
+
+---

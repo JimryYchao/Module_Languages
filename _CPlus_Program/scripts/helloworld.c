@@ -1,17 +1,16 @@
 #include <stdio.h>
-#include <string.h>
+
+extern char* HELLO;
+extern char* WORLD;
+int num = 1;
+char Str[10];
+
 int main(void)
 {
-    // char Str[20] = "hello";
-    // char str[] = " world";
-
-    // printf("Str address: %p\n"
-    //     "Str value: %s\n"
-    //     ">> use strcat(Str,str) <<\n", Str, Str);
-
-    // strcat(Str, str);
-    // printf("new Str address: %p\n"
-    //     "Str value: %s", Str, Str);
-
-
+    extern int num;
+    extern char Str[10];
+    puts(HELLO);
+    puts(WORLD);
+    return 0;
 }
+
