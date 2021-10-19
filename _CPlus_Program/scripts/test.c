@@ -2,5 +2,4 @@
 
 char *HELLO = "Hello";
 char *WORLD = "World";
-extern int num;
-
+extern int num; 

@@ -20,6 +20,19 @@
     - [1.11 存储类别与函数](#111-存储类别与函数)
   - [2. 随机数函数和静态变量](#2-随机数函数和静态变量)
     - [2.1 掷骰子](#21-掷骰子)
+  - [3. 分配内存 malloc() 与 free()](#3-分配内存-malloc-与-free)
+    - [3.1 malloc](#31-malloc)
+    - [3.2 free](#32-free)
+    - [3.3 free 的重要性](#33-free-的重要性)
+    - [3.4 calloc](#34-calloc)
+    - [3.5 动态内存分配和变长数组](#35-动态内存分配和变长数组)
+    - [3.6 存储类别与动态内存分配](#36-存储类别与动态内存分配)
+  - [4. 类型限定符](#4-类型限定符)
+    - [4.1 const](#41-const)
+    - [4.2 volatile](#42-volatile)
+    - [4.3 restrict](#43-restrict)
+    - [4.4 _Atomic](#44-_atomic)
+    - [4.5 旧关键字的新位置 (C99)](#45-旧关键字的新位置-c99)
 
 ---
 ## 1. 存储类别
@@ -373,4 +386,369 @@ void srand1(unsigned int seed)  // 外部调用函数重置随机数种子
 ---
 ### 2.1 掷骰子
 
-- 
+* 一个 6 面的骰子, 需要获得 1 ~ 6 之间的随机数, rand() 生成的随机数在 0 ~ Rand_MAX(= INT_MAX) 之间, 实现方法
+  - 随机数求取模 6, 获得的整数在 0 ~ 5 之间
+  - 结果加 1, 保持新值在 1 ~ 6 之间
+  - 把第 1 步中的数字 6 替换成骰子面数(方便拓展, 骰子也存在更多的面数)
+
+```c
+#include <stdio.h>
+#include <stdlib.h> /* 为库函数 srand() 提供原型 */
+#include <time.h>
+
+static int roll_count = 0;
+static int roll(int);
+int roll_n_dice(int, int);
+
+int main(void)
+{
+    int dice, roll;
+    int sides;
+    int status;
+    printf("Enter the number of sides per die, 0 to stop.\n");
+    while (scanf("%d", &sides) == 1 && sides > 0)
+    {
+        printf("How many dice?\n");
+        if ((status = scanf("%d", &dice)) != 1)
+        {
+            if (status == EOF)
+                break;           /* 退出循环 */
+            else
+            {
+                printf("You should have entered an integer.");
+                printf(" Let's begin again.\n");
+                while (getchar() != '\n')
+                    continue;   /* 处理错误的输入 */
+                printf("How many sides? Enter 0 to stop.\n");
+                continue;       /* 进入循环的下一轮迭代 */
+            }
+        }
+        roll = roll_n_dice(dice, sides);
+        printf("You have rolled a %d using %d %dsided dice.\n ", roll, dice, sides);
+        printf("How many sides? Enter 0 to stop.\n");
+    }
+    printf("The rollem() function was called %d times.\n ", roll_count);
+    printf("GOOD FORTUNE TO YOU!\n");
+    return 0;
+}
+int roll(int sides)
+{   
+    srand((unsigned int)time(0)); /* 随机种子, 与 rand()混合使用 */
+    int roll;
+    roll = rand() % sides + 1;
+    roll_count++;
+    return roll;
+}
+int roll_n_dice(int dice, int sides)
+{
+    int d, total = 0;
+    if (sides < 2)
+    {
+        puts("Need at least 2 sides");
+        return -2;
+    }
+    if (dice < 1)
+    {
+        puts("Need at least 1 die");
+        return -1;
+    }
+    for (d = 0; d < dice; d++)
+        total += roll(sides);
+    return total;
+}
+```
+
+---
+## 3. 分配内存 malloc() 与 free() 
+
+- 一般 C 数据声明时, 程序使用的内存大多数是自动分配的(#include stdlib.h)
+
+---
+### 3.1 malloc
+
+- 可以使用 malloc 函数在程序运行时分配更多的内存, 接受一个参数表示所需要的内存字节数, 该函数会找到合适的匿名空闲内存块, 返回值为动态分配内存的首字节地址(返回一个指针对象, 指向 void 的指针); 分配内存失败时, 将返回空指针
+
+- 可以把指向 void 通用指针赋给任意类型的指针, 不用考虑类型匹配的问题(可以强制转换成匹配的类型)
+
+> 为 30 个 double 类型的值请求内存空间, ptd 指向该位置
+
+```c
+    double * ptd;
+    ptd = (double*)malloc(30* sizeof(double));
+```
+
+- ptd 指向一个 double 类型, 但不是指向内含 30 个 double 类型值的块, ptd 指向了该内存的首元素, 可以像数组那样 ptd[n] 访问该区域的元素变量
+
+> 动态数组
+
+- 数组的声明, 可以是常量表示维度自动分配内存创建, 也可以声明变长数组, 在函数块中的自动内存中创建, 或者是声明一个指针, 调用 malloc 函数创建
+
+- 利用变长数组的特征与分配内存函数可以创建动态数组, 可以在程序运行时选择数组的大小和分配内存
+
+> exit()
+
+- 如果内存分配失败，可以调用 exit() 函数结束程序
+
+- 标准提供了两个返回值以保证在所有操作系统中都能正常工作：EXIT_SUCCESS（或者，相当于 0）表示普通的程序结束，EXIT_FAILURE 表示程序异常中止
+
+```c
+    ptd = (double *) malloc(n * sizeof(double));
+```
+
+---
+### 3.2 free
+
+- free() 要与 malloc() 函数搭配使用, free 函数的参数是 malloc 返回的地址, 表示释放之前 malloc 分配的内存, 不能使用 free 释放其他方式分配的内存
+
+- 被 free 释放掉的内存区域, 访问数据时, 数据以丢失
+
+- 一般将 free 函数位于程序的末尾
+
+> malloc, free, exit 动态分配数组
+
+```c
+#include <stdio.h>
+#include <stdlib.h> /* 为 malloc()、free()提供原型 */
+int main(void)
+{
+	double* ptd;
+	int max;
+	int number;
+	int i = 0;
+	puts("What is the maximum number of type double entries ? ");
+	if (scanf("%d", &max) != 1)
+	{
+		puts("Number not correctly entered -- bye.");
+		exit(EXIT_FAILURE);
+	}
+	ptd = (double*)malloc(max * sizeof(double));
+	if (ptd == NULL)
+	{
+		puts("Memory allocation failed. Goodbye.");
+		exit(EXIT_FAILURE);
+	}
+	/* ptd 现在指向有max个元素的数组 */
+	puts("Enter the values (q to quit):");
+	while (i < max && scanf("%lf", &ptd[i]) == 1)
+		++i;
+	printf("Here are your %d entries:\n", number = i);
+	for (i = 0; i < number; i++)
+	{
+		printf("%7.2f ", ptd[i]);
+		if (i % 7 == 6) // 7个元素一行
+			putchar('\n');
+	}
+	if (i % 7 != 0)
+		putchar('\n');
+	puts("Done.");
+	free(ptd);
+	return 0;
+}
+```
+
+---
+### 3.3 free 的重要性
+
+- 静态内存的数量在编译时是固定的，在程序运行期间也不会改变。
+  
+- 自动变量使用的内存数量在程序执行期间自动增加或减少。但是动态分配的内存数量只会增加，除非用 free() 进行释放
+
+- 若未使用 free 释放 malloc 申请的内存, 且 malloc 返回的指针丢失或被释放, 该区域内存也不会被自动回收, 由于指针丢失, 导致这块区域也无法访问且无法重复利用
+
+- 无节制申请内存但不释放的情况下, 会导致大量的内存被耗尽, 程序未结束之前就已经耗尽所有的内存, 这类问题称为内存泄露 (memory leak)
+
+- 因此在使用申请的内存之后不再使用, 需要使用 free 释放掉多余的内存
+
+---
+### 3.4 calloc 
+
+* 分配内存可以使用 calloc(), calloc(unsigned int count, unsigned int size);
+  - count 表示所需的存储单元的数目
+  - size 表示存储单元的大小(字节为单位)
+
+- calloc 函数在创建内存的时候, 同时会将块中的所有位都设置为 0 
+
+- 使用 free 函数释放 calloc 申请的内存
+
+```c
+    long * newmem;
+    newmem = (long *)calloc(100, sizeof (long));
+```
+
+---
+### 3.5 动态内存分配和变长数组
+
+- 使用变长数组或 malloc 创建数组的行为很相似, 但变长数组是自动存储类型, 该内存空间会自动释放, 而 malloc 需要使用 free 释放不用的空间
+
+- 变长数组仅能在该定义的块中使用, malloc 创建的数组可以在多个函数中调用
+
+- free 使用的指针变量可以与 malloc 的指针变量不同, 但要求两个指针的地址值相同, 不能释放同一块内存两次
+
+> 多维数组
+
+```c
+    int n = 5;
+    int m = 6;
+
+    int arr[n][m];  // n x m de 变长数组
+    int(*p1)[6];    // C99 之前写法
+    int(*p2)[m];    // 需要编译器支持变长数组
+
+    p1 = (int(*)[6])malloc(n*6*sizeof(int));    // n x 6 数组
+    p2 = (int(*)[m])malloc(n*m*sizeof(int));    // n x m 数组, 需要支持变长数组
+```
+
+---
+### 3.6 存储类别与动态内存分配
+
+* 假设一个理想化模型: 程序把它可用的内存分为
+  - 一部分供具有外部链接、内部链接和无链接的静态变量使用
+  - 一部分供自动变量使用
+  - 一部分供动态内存分配
+
+- 静态类型所用的内存数量在编译时确定, 与程序的生命周期共存, 程序结束时销毁
+
+- 自动类型在程序进入定义块时创建, 离开块时销毁, 这部分内存通常以栈方式处理, 新创建的变量按顺序加入内存, 以相反的顺序销毁
+
+- 动态分配的内存在调用 malloc 或相关函数时存在, 在调用 free 时释放, 未使用的内存块分散在已使用的内存块之间, 使用动态内存通常比栈内存慢(动态分配的区域一般称为内存堆或自由内存)
+
+---
+## 4. 类型限定符
+
+- 一般地, 我们使用类型和存储类别来描述一个变量, C90 新增了变量的恒常性(constancy)和易变性(volatility)
+
+```c
+    // C90
+    const       恒常性
+    volatile    易变性
+    // C99
+    restrict    约束
+    // C11
+    _Atomic     以支持并发程序设计(可选)
+```
+
+---
+### 4.1 const
+
+- 以 const 关键字声明的对象，其值不能通过赋值或递增、递减来修改
+
+```c
+    const int nochange = 1;         // 只读
+    const char str[10] = "Hello";   // 只读数组
+    
+    // const 指针声明
+    const char* ptr1;        // const 限定 ptr1 指向的值, 指针本身可修改
+    char* const ptr2;        // const 限定 ptr2 指针本身, 指针指向的值可修改
+    const char* const ptr;    // 限定指针本身与其指向的值
+
+    // 形参指针
+    void display(const char str[]);     // 限定 str 只读
+    void display(const char* str)
+```
+
+> 对全局变量使用 const
+
+* 全局变量声明 const 限定, 可以保护数据不被外部更改数据, 但文件中共享 const 数据要注意
+  - 可以一个文件中使用定义式声明, 其他文件使用引用式声明(extern)
+  - 另一种可以把 const 变量放在一个头文件中, 在其他文件中包含该头文件, 必须在头文件中用关键字 static 声明全局 const 变量(未 static 修饰 const 全局, 将多个文件都有相同标识符的定义式声明)
+
+---
+### 4.2 volatile
+
+- volatile 限定告知计算机, 代理(不是变量所在的程序)可以修改该变量的值, 一般用于硬件地址以及在其他程序或同时运行的线程中共享数据
+
+> volatile 涉及编译器的优化:
+
+```c
+    val1 = x;
+    //do...不使用 x 的代码
+    val2 = x;
+```
+
+- 一些编译器会将 x 的值保存在寄存器, 当 val2 使用 x 时, 并不会从原始内存位置的读取 x 的值, 会从寄存器上读取 x, 目的是为了程序优化(此过程称为高速缓存 caching)
+
+- 但如果其他的代理在 val1 与 val2 改变了 x 的值, 编译器并不知道这类事发生, 安全起见, 使用 valotile 限定的变量不会采用高速缓存的方式读取 x 的值
+
+> const volatile 变量
+
+- 可以同时用 const 和 volatile 限定一个值, 通常用 const 把硬件时钟设置为程序不能更改的变量，但是可以通过代理改变，这时用 volatile
+
+```c
+    volatile const int loc;         // 等价
+    const volatile int * ploc;
+```
+
+---
+### 4.3 restrict
+
+- restrict 关键字允许编译器优化某部分代码以更好地支持计算, 只能用于指针, 表明该指针是访问数据对象的唯一且初始的方式
+
+```c
+    int * restrict restar = (int *) malloc(10 * sizeof(int));
+    // 指针 restar 是访问由 malloc() 所分配内存的唯一且初始的方式
+
+    restar[0] += 5;
+    restar[0] += 3;
+    // 由于 restar 唯一指定访问方式, 编译器处于优化考虑, 会采用 restar[0] += 8 进行替换
+
+    int ar[10];
+    int * par = ar;
+
+    par[0] += 5;
+    ar[0] *= 2;
+    par[0] += 3;    // par 未使用 restirct 限定, 编译器就必须假设最坏的方式(其他标识符可能已经改变该地址的值), par[0] += 8 不能进行替换
+```
+
+- 如果用了 restrict 关键字，编译器就可以选择捷径优化计算
+
+- restrict 限定符还可用于函数形参中的指针, 意味着编译器可以假定在函数体内其他标识符不会修改该指针指向的数据，而且编译器可以尝试对其优化
+
+> C 库有两个函数用于把一个位置上的字节拷贝到另一个位置
+
+```c
+    void * memcpy(void * restrict s1, const void * restrict s2,size_t n); 
+    void * memmove(void * s1, const void * s2, size_t n);
+```
+
+- 表示从位置 s2 把 n 字节拷贝到 s1, 其中 memcpy 要求两个位置不重叠, memmove 不要求
+
+- memcpy 说明两个指针都是访问相应数据的唯一方式, 要求不能访问同一块数据
+
+---
+### 4.4 _Atomic 
+
+- 并发程序设计把程序执行分成可以同时执行的多个线程, 因此如何管理访问相同数据的不同线程
+
+- C11 通过包含可选的头文件 stdatomic.h 和 threads.h，提供了一些可选的（不是必须实现的）管理方法
+
+- 要通过各种宏函数来访问原子类型。当一个线程对一个原子类型的对象执行原子操作时，其他线程不能访问该对象
+
+```c
+    int num;        // 普通声明
+    num = 12;       // 普通赋值
+
+    _Atomic int num;            // 原子类型 num
+    atomic_store(&num,12);      // 使用 stdatomic.h 宏对 num 赋值, 该原子过程中, 其他线程无法访问 num
+```
+
+---
+### 4.5 旧关键字的新位置 (C99)
+
+> const restrict
+
+```c
+    void method(int * const a1, int * restrict a2, int n);      // 常规旧风格
+    //等价于 (新等价语法)
+    void method(int a1[const], int a2[restrict], int n);    
+        // 指针表示法和数组表示法都可以使用这两个限定符
+```
+
+> static 新增如何使用 static 形式参数
+
+```c
+    double stick(double ar[static 20]);
+```
+
+- static 的这种用法表明，函数调用中的实际参数应该是一个指向数组首元素的指针，且该数组至少有 20 个元素
+
+---
