@@ -1,15 +1,15 @@
 {
-    "files.associations": {
-        "stdio.h": "c",
-        "stdint.h": "c",
-        "inttypes.h": "c",
-        "stdbool.h": "c",
-        "conio.h": "c",
-        "initializer_list": "c",
-        "type_traits": "c",
-        "xstring": "c",
-        "xutility": "c",
-        "time.h": "c"
-    },
-    "C_Cpp.errorSquiggles": "Disabled"
+	"files.associations": {
+		"stdint.h": "c",
+		"cstdlib": "c",
+		"iterator": "c",
+		"xutility": "c",
+		"stdio.h": "c",
+		"string.h": "c",
+		"atomic": "c",
+		"cstddef": "c",
+		"ios": "c",
+		"xlocale": "c",
+		"limits.h": "c"
+	}
 }

@@ -7,28 +7,35 @@
 
 ---
 - [C Plus 文件的输入与输出](#c-plus-文件的输入与输出)
-  - [1. 与文件进行通信](#1-与文件进行通信)
-    - [1.1 文件](#11-文件)
-    - [1.2 文本模式与二进制模式](#12-文本模式与二进制模式)
-    - [1.3 I/O 的级别](#13-io-的级别)
-    - [1.4 标准文件](#14-标准文件)
-  - [2. 标准 I/O](#2-标准-io)
-    - [2.1 检查命令行参数](#21-检查命令行参数)
-    - [2.2 fopen 函数](#22-fopen-函数)
-    - [2.3 getc 与 putc 函数](#23-getc-与-putc-函数)
-    - [2.4 文件结尾](#24-文件结尾)
-    - [2.5 fclose 函数](#25-fclose-函数)
-    - [2.6 指向标准文件的指针](#26-指向标准文件的指针)
-  - [3. 一个简单的文件压缩过程](#3-一个简单的文件压缩过程)
-  - [4. 文件 I/O 函数](#4-文件-io-函数)
-    - [4.1 fprintf 和 fscanf 函数](#41-fprintf-和-fscanf-函数)
-    - [4.2 fgets 和 fputs 函数](#42-fgets-和-fputs-函数)
-  - [5. 随机访问: fseek 和 ftell 函数](#5-随机访问-fseek-和-ftell-函数)
-    - [5.1 fseek 与ftell 的工作原理](#51-fseek-与ftell-的工作原理)
-    - [5.2 二进制模式和文本模式](#52-二进制模式和文本模式)
-    - [5.3 可移植性](#53-可移植性)
-    - [5.4 fgetpos 与 fsetpos 函数](#54-fgetpos-与-fsetpos-函数)
-  - [6. 标准 I/O 的机理](#6-标准-io-的机理)
+	- [1. 与文件进行通信](#1-与文件进行通信)
+		- [1.1 文件](#11-文件)
+		- [1.2 文本模式与二进制模式](#12-文本模式与二进制模式)
+		- [1.3 I/O 的级别](#13-io-的级别)
+		- [1.4 标准文件](#14-标准文件)
+	- [2. 标准 I/O](#2-标准-io)
+		- [2.1 检查命令行参数](#21-检查命令行参数)
+		- [2.2 fopen 函数](#22-fopen-函数)
+		- [2.3 getc 与 putc 函数](#23-getc-与-putc-函数)
+		- [2.4 文件结尾](#24-文件结尾)
+		- [2.5 fclose 函数](#25-fclose-函数)
+		- [2.6 指向标准文件的指针](#26-指向标准文件的指针)
+	- [3. 一个简单的文件压缩过程](#3-一个简单的文件压缩过程)
+	- [4. 文件 I/O 函数](#4-文件-io-函数)
+		- [4.1 fprintf 和 fscanf, rewind 函数](#41-fprintf-和-fscanf-rewind-函数)
+		- [4.2 fgets 和 fputs 函数](#42-fgets-和-fputs-函数)
+	- [5. 随机访问: fseek 和 ftell 函数](#5-随机访问-fseek-和-ftell-函数)
+		- [5.1 fseek 与ftell 的工作原理](#51-fseek-与ftell-的工作原理)
+		- [5.2 二进制模式和文本模式](#52-二进制模式和文本模式)
+		- [5.3 可移植性](#53-可移植性)
+		- [5.4 fgetpos 与 fsetpos 函数](#54-fgetpos-与-fsetpos-函数)
+	- [6. 标准 I/O 的机理](#6-标准-io-的机理)
+	- [7. 其他标准 I/O 函数](#7-其他标准-io-函数)
+		- [7.1 ungetc](#71-ungetc)
+		- [7.2 fflush](#72-fflush)
+		- [7.3 setvbuf](#73-setvbuf)
+		- [7.4 二进制 I/O fread 与 fwrite](#74-二进制-io-fread-与-fwrite)
+		- [7.5 feof 与 ferror](#75-feof-与-ferror)
+		- [7.6 用二进制 I/O 进行随机访问](#76-用二进制-io-进行随机访问)
 
 ---
 ## 1. 与文件进行通信
@@ -269,7 +276,7 @@ int main(int argc, char* argv[])
 ---
 ## 4. 文件 I/O 函数
 
-### 4.1 fprintf 和 fscanf 函数
+### 4.1 fprintf 和 fscanf, rewind 函数
 
 - 文件 I/O 函数要用 FILE 指针指定待处理的文件
 
@@ -468,8 +475,218 @@ int main(void)
 ---
 ## 6. 标准 I/O 的机理
 
+> 第一步  fopen
 
+- 调用 fopen 函数打开文件, C 程序会自动打开三种标准文件, fopen 不仅打开一个文件同时会创建一个缓冲区 (在读写模式下会创建两个缓冲区) 以及一个包含文件和缓冲区数据的结构
 
+- fopen 会返回一个指向该结构的指针 (fopen 函数打开一个流, 文本流或二进制流), 这个结构通常包含一个指定流中当前位置的文件位置指示器, 还包含错误和文件结尾的指示器、一个指向缓冲区开始处的指针、一个文件标识符和一个计数（统计实际拷贝进缓冲区的字节数）。
 
+> 第二步  fp 指向
 
+- 调用定义在 stdio.h 的输入函数 (如 fscanf, getc, fgets), 调用这些函数时, 文件中的数据块就被拷贝到缓冲区, 缓冲区的大小一般是 512 字节或是它的倍数
 
+- 最初调用输入函数时, 一般需要设置 fp 指针所指的结构中的值 (设置流中的当前位置和拷贝进缓冲区的字节数, 一般从字节 0 开始)
+
+> 第三步 输入函数
+
+- 输入函数按要求从缓冲区读取数据, 文件位置指示器被设置为指向刚读取字符的下位字符, 所有的输入函数都是用相同的缓冲区, 任意一个输入函数被调用都将从上一个函数停止调用的位置开始
+
+- 缓冲区读取结束时, 函数会请求把下一块缓冲大小的数据块从文件拷贝到缓冲区, 循环该行为直至输入函数可以读取到文件的所有内容, 直至文件末尾, 返回 EOF
+
+> 第四步 输出函数
+
+- 输出函数以类似输入读取文件的方式把数据写入缓冲区, 缓冲区填满时将数据拷贝到文件
+
+> 第五步 fclose
+
+- 调用 fclose 关闭缓冲区与文件, 释放流占用的资源
+
+---
+## 7. 其他标准 I/O 函数
+
+### 7.1 ungetc
+
+- ungetc() 函数把 c 指定的字符放回输入流中, 下一次输入函数读入的字符定位到最后放回的字符位置
+
+```c
+	int ungetc(int c, FILE *fp);
+	>>>  c		将 c 指定的字符放回输入流中
+	
+	ch = getc(fp);
+	ungetc(ch,fp);
+```
+
+> 读取内容但不包括 >>冒号<<
+
+```c
+int main(void)
+{
+	char ch;
+	while ((ch = getchar()) != 0 && ch != EOF)
+	{
+		if (ch == ':')
+		{
+			ungetc(':',stdout);
+			ch = getchar();		// 下次循环时跳过 : 字符, 此时 ch = ':'
+			continue;
+		}
+		putc(ch,stdout);
+	}
+}
+```
+
+---
+### 7.2 fflush 
+
+- 调用 fflush() 函数引起输出缓冲区中所有的未写入数据被发送到 fp 指定的输出文件, 在输出操作时调用, 此过程为刷新缓冲区
+
+- fp 为空指针时, 所有缓冲区都被刷新
+
+- 在输入流中使用 fflush 函数效果是未定义的, 只要最近一次操作不是输入操作, 就可以调用 fflush 更新流
+
+```c
+	int fflush(FILE *fp);
+```
+
+---
+### 7.3 setvbuf
+
+- setvbuf() 函数创建了一个供标准 I/O 函数替换使用的缓冲区, 在打开文件后且没有对流进行其他操作之前调用该函数
+
+- setvbuf 主要用于指定缓冲区的地址与大小, 指针 fp 识别待处理的流，buf 指向待使用的存储区, 若 buf 的值非 NULL, 则必须创建一个缓冲区
+
+```c
+	int setvbuf(FILE * restrict fp, 	// 待处理的流
+				char * restrict buf, 	// 待使用的缓冲区
+				int mode,				// 缓冲模式
+				size_t size)			// 数据类型数组的大小
+	>>> buf
+		可以传递 NULL, 函数会为自己分配一个缓冲区
+
+	>>> mode
+		_IOFBF		完全缓冲(在缓冲区满时刷新)
+		_IOLBF		行缓冲(在缓冲区满时或写入一个换行符时)
+		_IONBF		无缓冲
+
+	>>> size
+		缓冲区大小, 若每个数据对象的大小是 300 字节, 则它的大小应是该数据对象大小的倍数
+```
+
+---
+### 7.4 二进制 I/O fread 与 fwrite
+
+- 之前用到的标准 I/O 函数都是面向文本的, 在处理数值转换说明的时候, 存在大小空间的变动, 例如, fprintf 把数值转换成字符数据, 这种转换可能会改变值
+
+- 为保证数值在储存前后一致，最精确的做法是使用与计算机相同的位组合来储存
+
+- 保存数据时若以程序所用到的表示法把数据储存在文件中, 则会以二进制形式储存数据,不存在从数值形式到字符串的转换过程, 可以保护相关数据精度不被丢失
+
+- fread 与 fwrite 用于以二进制形式处理数据, 实际上，所有的数据都是以二进制形式储存的，甚至连字符都以字符码的二进制表示来储存
+
+```c
+	// fwrite
+	size_t fwrite(void const* _Buffer,		// 待处理的流
+		   	size_t _ElementSize,			// 待写入数据块的大小
+			size_t _ElementCount,			// 待写入数据块的数量
+			FILE* restrict _Stream)			// 待写入的文件
+		return	返回成功写入项的数目	
+	>>> 要保存一个内含 10 个 double 类型值的数组
+	double earnings[10];
+	fwrite(earnings, sizeof(double), 10, fp);
+
+	// fread
+	size_t fread(void* restrict _Buffer,	// 待接收读取的数据的块的地址
+			size_t _ElementSize,			// 待读取数据块的大小
+			size_t _ElementCount,			// 待读取数据块的数量
+			FILE* restrict _Stream)			// 待读取的文件
+		return	返回实际读取到的数目
+	>>> 把 10 个 double 大小的值拷贝进 earnings 数组中
+	double earnings[10];
+	fread(earnings, sizeof (double), 10, fp);
+```
+
+> 二进制输出和文本输出
+
+```c
+
+	int num = 12345;	
+	>>> 以二进制数把 1234 储存在 num 中
+		___00110000_00111001___
+	// 1. 文本输出模式
+	fprintf(fp,"%d",num);
+	>>> 把 '1'、'2'、'3'、'4'、'5' 的二进制码写入文件
+	    ___00110001_00110010_00110011_00110100_00110101___
+	//--------------------------------------------------------
+	// 2. 二进制输出
+	fwrite(&num, sizeof(int), 1, fp);
+	>>> 把值 12345 的二进制写入文件
+		___00110000_00111001___
+```
+
+- 一般而言，用二进制模式在二进制格式文件中储存二进制数据
+
+---
+### 7.5 feof 与 ferror
+
+- 如果标准输入函数返回 EOF，则通常表明函数已到达文件结尾。
+
+- 然而，出现读取错误时，函数也会返回 EOF。feof() 和 ferror() 函数用于区分这两种情况
+
+```c
+	int feof(FILE *fp);		
+	// 当上一次输入调用检测到文件结尾时, 返回一个非 0 值, 否则返回 0
+
+	int ferror(FILE *fp);
+	// 当读或写出现错误，ferror() 函数返回一个非零值，否则返回 0。
+```
+
+---
+### 7.6 用二进制 I/O 进行随机访问
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#define ARSIZE 1000
+int main()
+{
+	double numbers[ARSIZE];
+	double value;
+	const char *file = "numbers.dat";
+	int i;
+	long pos;
+	FILE *iofile;
+	// 1. 创建一组 double 类型的值
+	for (i = 0; i < ARSIZE; i++)
+		numbers[i] = 100.0 * i + 1.0 / (i + 1);
+	// 2. 尝试打开文件 (二进制写入模式)
+	if ((iofile = fopen(file, "wb")) == NULL)
+	{
+		fprintf(stderr, "Could not open %s for output.\n", file);
+		exit(EXIT_FAILURE);
+	}
+	// 3. 以二进制格式把数组写入文件
+	fwrite(numbers, sizeof(double), ARSIZE, iofile);
+	fclose(iofile);
+	if ((iofile = fopen(file, "rb")) == NULL)	// 二进制只读模式
+	{
+		fprintf(stderr, "Could not open %s for random access.\n", file);
+		exit(EXIT_FAILURE);
+	}
+	// 4. 从文件中读取选定的内容
+	printf("Enter an index in the range 0-%d.\n", ARSIZE - 1);
+	while (scanf("%d", &i) == 1 && i >= 0 && i < ARSIZE)
+	{
+		pos = (long)i * sizeof(double); // 计算偏移量
+		fseek(iofile, pos, SEEK_SET);	// 定位到此处
+		fread(&value, sizeof(double), 1, iofile);	// 二进制写入 value
+		printf("The value there is %f.\n", value);
+		printf("Next index (out of range to quit):\n");
+	}
+	// 5. 完成
+	fclose(iofile);
+	puts("Bye!");
+	return 0;
+}
+```
+
+---
