@@ -10,6 +10,7 @@
 		"cstddef": "c",
 		"ios": "c",
 		"xlocale": "c",
-		"limits.h": "c"
+		"limits.h": "c",
+		"cmath": "c"
 	}
 }
