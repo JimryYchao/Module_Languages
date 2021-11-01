@@ -5,12 +5,15 @@
 int main()
 {
 	using namespace std;
-	char charr[20] = {};
-	string str;
+	int Arr[10] = {0,1,2,3,4,5,6,7,8,9};
+	int* pArr = Arr;
 
-	cout << R"((This))) "Line" uses "\n" instead of endl._))" << '\n';
-	// cin.get();
-	return 0;
+	int counter = -1;
+	// 1. 数组模式访问元素
+	while(++counter < 10){
+		cout << "ARR: " << Arr[counter] << endl;
+		cout << "pARR: " << *(pArr + counter) << endl;
+	}
 }
 /*
 	Length of string in charr before input: 0
