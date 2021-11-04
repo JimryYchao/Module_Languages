@@ -20,6 +20,7 @@
 	- [4. 简单文件输入/输出](#4-简单文件输入输出)
 		- [4.1 文本 I/O 和文本文件](#41-文本-io-和文本文件)
 		- [4.2 写入到文本文件中](#42-写入到文本文件中)
+		- [4.3 读取文本文件](#43-读取文本文件)
 
 ---
 ## 1. 循环
@@ -277,15 +278,144 @@ toupper(ch) 	若小写字符，则返回其大写，否则返回该参数
 
 > 使用文件输出的主要步骤
 
-1．包含头文件fstream。
-2．创建一个ofstream对象。
-3．将该ofstream对象同一个文件关联起来。
-4．就像使用cout那样使用该ofstream对象。
+1．包含头文件 fstream。
+2．创建一个 ofstream 对象。
+3．将该 ofstream 对象同一个文件关联起来。
+4．就像使用 cout 那样使用该 ofstream 对象。
 
 > outfile.cpp
 
 ```c++
-	
+// outfile.cpp -- writing to a file
+#include <iostream>
+#include <fstream>                  // for file I/O
+
+int main()
+{
+    using namespace std;
+
+    char automobile[50];
+    int year;
+    double a_price;
+    double d_price;
+
+    ofstream outFile;               // create object for output
+    outFile.open("carinfo.txt");    // associate with a file
+
+    cout << "Enter the make and model of automobile: ";
+    cin.getline(automobile, 50);
+    cout << "Enter the model year: ";
+    cin >> year;
+    cout << "Enter the original asking price: ";
+    cin >> a_price;
+    d_price = 0.913 * a_price;
+
+// display information on screen with cout
+
+    cout << fixed;
+    cout.precision(2);
+    cout.setf(ios_base::showpoint);
+    cout << "Make and model: " << automobile << endl;
+    cout << "Year: " << year << endl;
+    cout << "Was asking $" << a_price << endl;
+    cout << "Now asking $" << d_price << endl;
+
+// now do exact same things using outFile instead of cout
+
+    outFile << fixed;
+    outFile.precision(2);
+    outFile.setf(ios_base::showpoint);
+    outFile << "Make and model: " << automobile << endl;
+    outFile << "Year: " << year << endl;
+    outFile << "Was asking $" << a_price << endl;
+    outFile << "Now asking $" << d_price << endl;
+    
+    outFile.close();                // done with file
+    // cin.get();
+    // cin.get();
+    return 0;
+}
+```
+
+---
+### 4.3 读取文本文件
+
+> 文本文件输入，它是基于控制台输入的。控制台输入涉及多个方面
+
+- 必须包含头文件 iostream。
+- 头文件 iostream 定义了一个用处理输入的 istream 类。
+- 头文件 iostream 声明了一个名为 cin 的 istream 变量（对象）。
+- 必须指明名称空间 std；例如，为引用元素 cin，必须使用编译指令 using 或前缀 std::。
+- 可以结合使用 cin 和运算符 >> 来读取各种类型的数据。
+- 可以使用 cin 和 get() 方法来读取一个字符，使用 cin 和 getline() 来读取一行字符。
+- 可以结合使用 cin 和 eof()、fail() 方法来判断输入是否成功。
+- 对象 cin 本身被用作测试条件时，如果最后一个读取操作成功，它将被转换为布尔值 true，否则被转换为 false。
+
+> 文件输出
+
+- 必须包含头文件 fstream。
+- 头文件 fstream 定义了一个用于处理输入的 ifstream 类。
+- 需要声明一个或多个 ifstream 变量（对象），并以自己喜欢的方式对其进行命名，条件是遵守常用的命名规则。
+- 必须指明名称空间 std；例如，为引用元素 ifstream，必须使用编译
+- 指令 using 或前缀 std::。
+- 需要将 ifstream 对象与文件关联起来。为此，方法之一是使用 open() 方法。
+- 使用完文件后，应使用 close() 方法将其关闭。
+- 可结合使用 ifstream 对象和运算符 >> 来读取各种类型的数据。
+- 可以使用 ifstream 对象和 get() 方法来读取一个字符，使用 ifstream 对象和 getline() 来读取一行字符。
+- 可以结合使用 ifstream 和 eof()、fail() 等方法来判断输入是否成功。
+- ifstream 对象本身被用作测试条件时，如果最后一个读取操作成功，它将被转换为布尔值 true，否则被转换为 false。
+
+```c++
+// sumafile.cpp -- functions with an array argument
+#include <iostream>
+#include <fstream>          // file I/O support
+#include <cstdlib>          // support for exit()
+const int SIZE = 60;
+int main()
+{
+    using namespace std;
+    char filename[SIZE];
+    ifstream inFile;        // object for handling file input
+
+    cout << "Enter name of data file: ";
+    cin.getline(filename, SIZE);
+    inFile.open(filename);  // associate inFile with a file
+    if (!inFile.is_open())  // failed to open file
+    {
+        cout << "Could not open the file " << filename << endl;
+        cout << "Program terminating.\n";
+        // cin.get();    // keep window open
+        exit(EXIT_FAILURE);
+    }
+    double value;
+    double sum = 0.0;
+    int count = 0;          // number of items read
+
+    inFile >> value;        // get first value
+    while (inFile.good())   // while input good and not at EOF
+    {
+        ++count;            // one more item read
+        sum += value;       // calculate running total
+        inFile >> value;    // get next value
+    }
+    if (inFile.eof())
+        cout << "End of file reached.\n";
+    else if (inFile.fail())
+        cout << "Input terminated by data mismatch.\n";
+    else
+        cout << "Input terminated for unknown reason.\n";
+    if (count == 0)
+        cout << "No data processed.\n";
+    else
+    {
+        cout << "Items read: " << count << endl;
+        cout << "Sum: " << sum << endl;
+        cout << "Average: " << sum / count << endl;
+    }
+    inFile.close();         // finished with the file
+    // cin.get();
+    return 0;
+}
 ```
 
 ---
