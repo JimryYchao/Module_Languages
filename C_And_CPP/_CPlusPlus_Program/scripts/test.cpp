@@ -2,18 +2,59 @@
 #include <iostream>
 #include <string>  // make string class available
 #include <cstring> // C-style string library
+
+typedef void (*PF)(int);
+using namespace std;
+void fun(int);
+int &fun(int &n, int &&m);
+
+extern "C" void spiff(int);	  // use C protocol
+extern void spoff(int);		  // use C++ protocol
+extern "C++" void spaff(int); // use C++ protocol
+
+template <typename T>
+void Swap(T, T);
+
 int main()
 {
-	using namespace std;
-	int Arr[10] = {0,1,2,3,4,5,6,7,8,9};
-	int* pArr = Arr;
+	int *pa = new int[3]{1, 2, 3};
+	cout << pa << endl;
+	cout << &pa[2] << endl;
+	const int *p = &pa[2];
+	delete [] pa;
+	cout << pa << endl;
+	cout << *p << endl;
 
-	int counter = -1;
-	// 1. 数组模式访问元素
-	while(++counter < 10){
-		cout << "ARR: " << Arr[counter] << endl;
-		cout << "pARR: " << *(pArr + counter) << endl;
-	}
+	PF pf = fun;
+	pf(10);
+
+	PF Pspiff = spiff;
+	Pspiff(11);
+
+	PF Pspoff = spoff;
+	Pspiff(12);
+
+	PF Pspaff = spaff;
+	Pspiff(13);
+}
+
+void spiff(int x)
+{
+	fun(x);
+}
+void spoff(int x)
+{
+	fun(x);
+}
+void spaff(int x)
+{
+	fun(x);
+}
+
+void fun(int n)
+{
+	using namespace std;
+	cout << n;
 }
 /*
 	Length of string in charr before input: 0
